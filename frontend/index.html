@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Secure Messenger</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- ЭКРАН 1: вход -->
+<section id="screen-login">
+  <h1>Family Secure Messenger</h1>
+  <p class="muted">Вход только по сид-фразе. Сервер её не видит.</p>
+
+  <label>Сид-фраза (12 слов, BIP39 english)</label>
+  <textarea id="mnemonic-input" rows="3" placeholder="apple banana cherry ..."></textarea>
+
+  <div class="row">
+    <button id="gen-seed">Сгенерировать</button>
+    <button id="login" class="primary">Войти</button>
+  </div>
+  <label class="check"><input type="checkbox" id="remember"> Запомнить в этой вкладке</label>
+
+  <p class="warn">Потеряешь фразу — потеряешь аккаунт навсегда. Запиши её на бумаге.</p>
+</section>
+
+<!-- ЭКРАН 2: мессенджер -->
+<section id="screen-chat">
+  <aside id="sidebar">
+    <div class="me">
+      <span id="ws-status" class="off">○ offline</span>
+      <button id="copy-my-contact" title="Скопировать мой контакт">📋</button>
+      <button id="add-contact" title="Добавить контакт">＋</button>
+      <button id="logout" title="Выйти">⏻</button>
+      <button id="change-my-name" title="Сменить моё имя">⚙</button>
+    </div>
+    <div class="muted small">Я: <span id="me-id"></span></div>
+    <div id="contacts"></div>
+  </aside>
+
+  <main>
+    <header id="chat-title">Выбери контакт</header>
+    <div id="messages"></div>
+    <footer>
+      <textarea id="composer" rows="1" placeholder="Сообщение… (Enter — отправить)"></textarea>
+      <button id="send" class="primary">→</button>
+    </footer>
+  </main>
+</section>
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

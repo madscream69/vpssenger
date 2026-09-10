@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>FSM · crypto test</title>
+<style>
+  body { font: 14px/1.4 ui-monospace, monospace; max-width: 900px; margin: 20px auto; padding: 0 12px; }
+  button { padding: 6px 10px; margin: 4px 4px 4px 0; }
+  textarea, input { width: 100%; box-sizing: border-box; font-family: inherit; }
+  pre { background: #111; color: #0f0; padding: 8px; overflow: auto; max-height: 300px; }
+  section { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+  code { background: #eee; padding: 0 3px; }
+</style>
+</head>
+<body>
+<h1>Family Secure Messenger · crypto smoke-test</h1>
+
+<section>
+  <h2>1. Сид-фраза</h2>
+  <button id="gen">Сгенерировать 12 слов</button>
+  <button id="derive">Деривировать ключи</button>
+  <textarea id="mnemonic" rows="2" placeholder="apple banana ..."></textarea>
+  <div id="keys"></div>
+</section>
+
+<section>
+  <h2>2. Знакомство (эмулируем 2 пользователя)</h2>
+  <button id="demo">Полный E2E-цикл (alice → bob)</button>
+  <p>Генерирует две сид-фразы, деривирует ключи, шифрует «Привет, bob!», расшифровывает и проверяет подпись.</p>
+</section>
+
+<section>
+  <h2>Лог</h2>
+  <pre id="log"></pre>
+</section>
+
+<script type="module" src="./js/test.js"></script>
+</body>
+</html>
