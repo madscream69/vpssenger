@@ -20,7 +20,7 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 // ---------- Boot ----------
 
 async function boot() {
-  contacts.loadContacts();
+  // contacts.loadContacts();
   wireUi();
 
   // Попытка восстановить из sessionStorage (если была галочка «запомнить»).
@@ -46,7 +46,8 @@ async function loginFromMnemonic(mnemonic) {
   set({ mnemonic, edSeed, xSeed, edPub, xPub });
 
   // ↓↓ новое: перезагружаем контакты с фильтром self
-  contacts.loadContacts(b64e(edPub));
+  contacts.migrateLegacyStorage(b64e(edPub));
+  contacts.loadContacts();
 
   try {
     contacts.askMyNameIfMissing();
@@ -87,10 +88,9 @@ function doLogout() {
 
 // ---------- Decrypt incoming ----------
 
-async function decryptAll() {
-  const { xSeed, edPub } = state;
+async function decryptAll({ retry = false } = {}) {
   for (const env of state.messages) {
-    if (env._plain !== undefined) continue;
+    if (!retry && env._plain !== undefined) continue;
     try {
       await decryptOne(env);
     } catch (e) {
@@ -225,12 +225,13 @@ function wireUi() {
 
   $("#logout").onclick = doLogout;
 
-  $("#add-contact").onclick = () => {
+  $("#add-contact").onclick = async () => {
     try {
       const raw = prompt("Вставь строку контакта (fsm1:name:edPub:xPub):");
       if (!raw) return;
       const c = contacts.importContactString(raw);
       contacts.addContact(c);
+      await decryptAll();
     } catch (e) { alert("Ошибка: " + e.message); }
   };
 
@@ -352,5 +353,9 @@ function escapeHtml(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
-
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch((e) =>
+    console.warn("SW register failed:", e)
+  );
+}
 boot();

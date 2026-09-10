@@ -1,15 +1,57 @@
 import { state, set } from "./state.js";
 import { b64e } from "./crypto.js";
 
-const LS_KEY = "fsm.contacts.v1";
+// ── ключи localStorage (v2: привязаны к edPub) ──
 
-export function loadContacts(selfEdPubB64 = null) {
+function contactsKey() {
+  const self = b64e(state.edPub);
+  return `fsm.${self}.contacts.v1`;
+}
+
+function myNameKey() {
+  const self = b64e(state.edPub);
+  return `fsm.${self}.myName.v1`;
+}
+
+// ── миграция v1 → v2 ──
+// v1-ключи не были привязаны к аккаунту; переносим их в v2 при первом
+// логине после апгрейда. Флаг в localStorage, чтобы не гонять миграцию вечно.
+
+const MIGRATION_FLAG = "fsm.migrated.v2";
+
+export function migrateLegacyStorage(edPubB64) {
+  if (localStorage.getItem(MIGRATION_FLAG) === "1") return;
+
+  const legacyContacts = localStorage.getItem("fsm.contacts.v1");
+  const legacyName = localStorage.getItem("fsm.myName.v1");
+
+  if (legacyContacts) {
+    // На всякий случай: не перетираем уже существующий v2-ключ.
+    const target = `fsm.${edPubB64}.contacts.v1`;
+    if (!localStorage.getItem(target)) localStorage.setItem(target, legacyContacts);
+    localStorage.removeItem("fsm.contacts.v1");
+  }
+
+  if (legacyName) {
+    const target = `fsm.${edPubB64}.myName.v1`;
+    if (!localStorage.getItem(target)) localStorage.setItem(target, legacyName);
+    localStorage.removeItem("fsm.myName.v1");
+  }
+
+  localStorage.setItem(MIGRATION_FLAG, "1");
+  console.info("[fsm] migrated localStorage v1 → v2");
+}
+
+// ── CRUD контактов ──
+
+export function loadContacts() {
+  if (!state.edPub) return; // ещё не залогинены
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const self = b64e(state.edPub);
+    const raw = localStorage.getItem(contactsKey());
     const list = raw ? JSON.parse(raw) : [];
     const clean = list.filter((c) =>
-      c && c.edPub && c.xPub && c.name &&
-      (!selfEdPubB64 || c.edPub !== selfEdPubB64)
+      c && c.edPub && c.xPub && c.name && c.edPub !== self
     );
     set({ contacts: clean });
     if (clean.length !== list.length) persist();
@@ -19,19 +61,19 @@ export function loadContacts(selfEdPubB64 = null) {
 }
 
 function persist() {
-  localStorage.setItem(LS_KEY, JSON.stringify(state.contacts));
+  if (!state.edPub) return;
+  localStorage.setItem(contactsKey(), JSON.stringify(state.contacts));
 }
 
 export function addContact({ name, edPub, xPub }) {
   if (!name || !edPub || !xPub) throw new Error("нужны name, edPub и xPub");
-  const self = state.edPub ? b64e(state.edPub) : null;
-  if (self && edPub === self) throw new Error("это твой собственный ключ — добавлять себя не нужно");
+  const self = b64e(state.edPub);
+  if (edPub === self) throw new Error("это твой собственный ключ");
   if (state.contacts.some((c) => c.edPub === edPub)) {
     throw new Error("контакт уже добавлен");
   }
   const cleanName = String(name).trim().slice(0, 32) || "без имени";
-  const next = [...state.contacts, { name: cleanName, edPub, xPub }];
-  set({ contacts: next });
+  set({ contacts: [...state.contacts, { name: cleanName, edPub, xPub }] });
   persist();
 }
 
@@ -54,18 +96,17 @@ export function findContact(edPub) {
   return state.contacts.find((c) => c.edPub === edPub) || null;
 }
 
-// ── своё имя (только локально, попадает в визитку) ──
-
-const LS_MY_NAME = "fsm.myName.v1";
+// ── своё имя ──
 
 export function getMyName() {
-  return localStorage.getItem(LS_MY_NAME) || "";
+  if (!state.edPub) return "";
+  return localStorage.getItem(myNameKey()) || "";
 }
 
 export function setMyName(name) {
   const clean = String(name).trim().slice(0, 32);
   if (!clean) throw new Error("имя не может быть пустым");
-  localStorage.setItem(LS_MY_NAME, clean);
+  localStorage.setItem(myNameKey(), clean);
   return clean;
 }
 
@@ -77,7 +118,7 @@ export function askMyNameIfMissing() {
   return setMyName(name);
 }
 
-// ── визитка ──
+// ── визитки ──
 
 export function exportContact(c) {
   return `fsm1:${encodeURIComponent(c.name)}:${c.edPub}:${c.xPub}`;
