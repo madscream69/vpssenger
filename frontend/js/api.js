@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { b64e } from "./crypto.js";
 
-const BASE = "http://127.0.0.1:8000"; // тот же origin; если фронт на другом — задать явно
+const BASE = ""; // тот же origin; если фронт на другом — задать явно http://127.0.0.1:8000
 
 async function request(method, path, { body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };

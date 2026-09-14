@@ -1,0 +1,42 @@
+{
+    # на VPS раскомментировать:
+    # email you@example.com
+}
+
+localhost {
+    tls internal
+
+    root * /srv/frontend
+    file_server
+
+    handle /auth/* {
+        reverse_proxy backend:8000
+    }
+    handle /messages* {
+        reverse_proxy backend:8000
+    }
+    handle /profile/* {
+        reverse_proxy backend:8000
+    }
+    handle /health {
+        reverse_proxy backend:8000
+    }
+    handle /ws {
+        reverse_proxy backend:8000
+    }
+    handle {
+        try_files {path} /index.html
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}

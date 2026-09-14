@@ -11,7 +11,8 @@ export function connectWs() {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  const url = `ws://127.0.0.1:8000/ws?token=${encodeURIComponent(state.token)}`;
+  // const url = `ws://127.0.0.1:8000/ws?token=${encodeURIComponent(state.token)}`;
+  const url = `${proto}//${location.host}/ws?token=${encodeURIComponent(state.token)}`;
   ws = new WebSocket(url);
 
   ws.onopen = () => set({ wsConnected: true });

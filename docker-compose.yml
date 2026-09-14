@@ -2,7 +2,6 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Никакой персистентности: сообщения живут только по TTL.
     command: >
       redis-server
       --save ""
@@ -23,9 +22,9 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    # Слушаем только на localhost — TLS и проксирование наружу через Caddy/Nginx.
-    ports:
-      - "127.0.0.1:8000:8000"
+    # Снаружи не торчим — только внутри docker-сети.
+    expose:
+      - "8000"
     networks: [internal]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -33,6 +32,25 @@ services:
       timeout: 5s
       retries: 3
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend:/srv/frontend:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    networks: [internal]
+
 networks:
   internal:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
