@@ -83,3 +83,15 @@ def verify_message_signature(
         return True
     except (BadSignatureError, ValueError):
         return False
+def canonical_profile_bytes(pubkey: bytes, name: str, updated_at: int) -> bytes:
+    """Формат: 'fsm-prof-v1\\0' || pubkey || u64(updated_at) || u16(len(name)) || name."""
+    name_b = name.encode("utf-8")
+    if len(name_b) > 1024:
+        raise ValueError("name too long")
+    return (
+        b"fsm-prof-v1\0"
+        + pubkey
+        + struct.pack(">Q", updated_at)
+        + struct.pack(">H", len(name_b))
+        + name_b
+    )

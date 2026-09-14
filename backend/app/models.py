@@ -39,3 +39,23 @@ class MessageIn(BaseModel):
         if not ID_RE.match(v):
             raise ValueError("id must match [A-Za-z0-9_-]{1,64}")
         return v
+class PushSubscriptionIn(BaseModel):
+    endpoint: str
+    keys: dict
+
+
+class PushSubscribeIn(BaseModel):
+    subscription: PushSubscriptionIn
+class ProfileIn(BaseModel):
+    name: str
+    updated_at: int
+    sig: str
+
+    @field_validator("name")
+    @classmethod
+    def _name_len(cls, v: str) -> str:
+        v = v.strip()
+        if not (1 <= len(v) <= 32):
+            raise ValueError("name must be 1..32 chars")
+        return v
+

@@ -24,5 +24,8 @@ class Settings(BaseSettings):
     # Сколько последних id держать в индексе inbox.
     inbox_max_size: int = 1000
 
+    vapid_private_key: str = ""
+    vapid_public_key: str = ""
+    vapid_subject: str = ""
 
 settings = Settings()

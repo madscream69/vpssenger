@@ -88,3 +88,45 @@ async def delete_message(redis, pubkey: str, msg_id: str) -> None:
     pipe.delete(f"msg:{pubkey}:{msg_id}")
     pipe.zrem(f"inbox:{pubkey}", msg_id)
     await pipe.execute()
+#------------subscriptions
+async def save_push_subscription(redis, pubkey: str, subscription: dict) -> None:
+    import json
+    key = f"push:{pubkey}"
+    existing = await redis.smembers(key)
+    endpoint = subscription["endpoint"]
+    for raw in existing:
+        try:
+            old = json.loads(raw)
+        except Exception:
+            continue
+        if old.get("endpoint") == endpoint:
+            await redis.srem(key, raw)
+    await redis.sadd(key, json.dumps(subscription, separators=(",", ":")))
+
+
+async def get_push_subscriptions(redis, pubkey: str) -> list[dict]:
+    import json
+    key = f"push:{pubkey}"
+    raws = await redis.smembers(key)
+    out = []
+    for raw in raws:
+        try:
+            out.append(json.loads(raw))
+        except Exception:
+            await redis.srem(key, raw)
+    return out
+
+
+async def delete_push_subscription(redis, pubkey: str, endpoint: str) -> None:
+    import json
+    key = f"push:{pubkey}"
+    raws = await redis.smembers(key)
+    for raw in raws:
+        try:
+            if json.loads(raw).get("endpoint") == endpoint:
+                await redis.srem(key, raw)
+        except Exception:
+            await redis.srem(key, raw)
+
+
+

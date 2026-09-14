@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 
 from app import redis_client as r
 from app.config import settings
-from app.routes import auth, messages
+from app.routes import auth, messages, profile, push
 from app.websocket import manager
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -46,6 +46,8 @@ async def health():
 
 app.include_router(auth.router)
 app.include_router(messages.router)
+app.include_router(profile.router)
+app.include_router(push.router)
 
 
 @app.websocket("/ws")
