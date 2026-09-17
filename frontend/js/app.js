@@ -17,6 +17,7 @@ import {
   wireCallUi, startOutgoingCall,
   showIncomingCall,
 } from "./call.js";
+import { onSignal, sendSignal } from "./callSignaling.js";
 function setView(view) {
   document.body.classList.toggle("view-list", view === "list");
   document.body.classList.toggle("view-chat", view === "chat");
@@ -24,12 +25,66 @@ function setView(view) {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+// ---------- RegisterCallHandlers ------
+
+// Регистрация обработчиков входящих сигналов звонка.
+// Вызывается один раз из boot().
+function registerCallHandlers() {
+  onSignal("call-invite", (msg) => {
+    console.log("INCOMING CALL", msg);
+    // TODO 6.3.4: showIncomingCall({ edPub: msg.from, name: ... })
+  });
+
+  onSignal("call-accept", (msg) => {
+    console.log("CALL ACCEPTED", msg);
+  });
+
+  onSignal("call-decline", (msg) => {
+    console.log("CALL DECLINED", msg);
+  });
+
+  onSignal("call-sdp", (msg) => {
+    console.log("SDP", msg.kind, msg.from?.slice(0, 12));
+  });
+
+  onSignal("call-ice", (msg) => {
+    console.log("ICE", msg.from?.slice(0, 12));
+  });
+
+  onSignal("call-end", (msg) => {
+    console.log("CALL ENDED", msg.reason);
+  });
+
+  onSignal("call-unreachable", (msg) => {
+    console.log("CALL UNREACHABLE", msg.to?.slice(0, 12));
+  });
+
+  onSignal("call-rate-limited", () => {
+    console.warn("Rate limited");
+  });
+
+  onSignal("call-error", (msg) => {
+    console.warn("Call error:", msg.error);
+  });
+
+  // Отладочный хелпер для проверки сигналинга через консоль.
+  window.fsmCallDebug = window.fsmCallDebug || {};
+  window.fsmCallDebug.testSignal = (toEdPub) => {
+    const callId = "test-" + Math.random().toString(36).slice(2, 10);
+    const ok = sendSignal({ type: "call-invite", to: toEdPub, callId });
+    console.log("sent call-invite:", { ok, callId, toEdPub: toEdPub.slice(0, 12) });
+    return callId;
+  };
+}
+
 // ---------- Boot ----------
 
 async function boot() {
+  wireCallUi();
+  registerCallHandlers();
   // contacts.loadContacts();
   wireUi();
-
+  
   // Попытка восстановить из sessionStorage (если была галочка «запомнить»).
   const saved = sessionStorage.getItem("fsm.mnemonic");
   if (saved && validateMnemonic(saved)) {
@@ -37,7 +92,17 @@ async function boot() {
     $("#remember").checked = true;
     await loginFromMnemonic(saved);
   }
-
+  // в конце boot() или после wireCallUi():
+  function attachCallDebug() {
+    window.fsmCallDebug = window.fsmCallDebug || {};
+    window.fsmCallDebug.testSignal = (toEdPub) => {
+      const callId = "test-" + Math.random().toString(36).slice(2, 10);
+      const ok = sendSignal({ type: "call-invite", to: toEdPub, callId });
+      console.log("sent call-invite:", { ok, callId, toEdPub: toEdPub.slice(0, 12) });
+      return callId;
+    };
+  }
+  attachCallDebug();
   render();
 }
 

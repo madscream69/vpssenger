@@ -1,5 +1,5 @@
 import { state, set } from "./state.js";
-
+import { dispatchSignal, attachSignaling } from "./callSignaling.js";
 let ws = null;
 let reconnectTimer = null;
 let onMessageCb = () => {};
@@ -14,7 +14,10 @@ export function connectWs() {
   // const url = `ws://127.0.0.1:8000/ws?token=${encodeURIComponent(state.token)}`;
   const url = `${proto}//${location.host}/ws?token=${encodeURIComponent(state.token)}`;
   ws = new WebSocket(url);
-
+  ws.onopen = () => {
+    set({ wsConnected: true });
+    attachSignaling(ws);
+  };
   ws.onopen = () => set({ wsConnected: true });
 
   ws.onclose = () => {
@@ -29,7 +32,18 @@ export function connectWs() {
   ws.onmessage = (ev) => {
     let msg;
     try { msg = JSON.parse(ev.data); } catch { return; }
-    onMessageCb(msg);
+
+    // Регулярные сообщения
+    if (msg.type === "message" && msg.message) {
+      onMessageCb(msg);
+      return;
+    }
+
+    // Сигналинг звонка
+    if (typeof msg.type === "string" && msg.type.startsWith("call-")) {
+      dispatchSignal(msg);
+      return;
+    }
   };
 }
 
