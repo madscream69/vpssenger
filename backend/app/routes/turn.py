@@ -12,22 +12,19 @@ router = APIRouter(prefix="/turn", tags=["turn"])
 
 
 @router.get("/credentials")
-async def get_turn_credentials(
-    me: str = Depends(get_current_pubkey),
-):
+async def get_turn_credentials(me: str = Depends(get_current_pubkey)):
     expiry = int(time.time()) + settings.turn_ttl_seconds
-
-    # edPub в base64 содержит /, +, = — неудобно для coturn.
-    # Заменяем на hex-хеш — безопасная строка.
+    # user_id — hex, безопасный для coturn (без / + =)
     user_id = hashlib.sha256(me.encode()).hexdigest()[:32]
     username = f"{expiry}:{user_id}"
 
     digest = hmac.new(
-        settings.turn_secret.encode(),
-        username.encode(),
-        hashlib.sha1,
+        settings.turn_secret.encode(), username.encode(), hashlib.sha1
     ).digest()
     credential = base64.b64encode(digest).decode()
+
+    # TURN host: IP или домен — задаётся в .env. IP надёжнее (обходим DNS-глюки).
+    host = settings.turn_host or "vpssenger.dolbit.fun"
 
     return {
         "username": username,
@@ -35,8 +32,8 @@ async def get_turn_credentials(
         "ttl": settings.turn_ttl_seconds,
         "realm": settings.turn_realm,
         "uris": [
-            "turn:vpssenger.dolbit.fun:3478?transport=udp",
-            "turn:vpssenger.dolbit.fun:3478?transport=tcp",
+            f"turn:{host}:3478?transport=udp",
+            f"turn:{host}:3478?transport=tcp",
         ],
         "stun_uris": [
             "stun:stun.l.google.com:19302",
