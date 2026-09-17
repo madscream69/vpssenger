@@ -18,17 +18,17 @@ vpssenger.dolbit.fun {
     handle /push/* {
         reverse_proxy backend:8000
     }
-    handle /health       { 
-	reverse_proxy backend:8000 
-    }
-    handle /ws           { 
-	reverse_proxy backend:8000 
-    }
     handle /turn/* {
         reverse_proxy backend:8000
     }
+    handle /health       { 
+	    reverse_proxy backend:8000 
+    }
+    handle /ws           { 
+	    reverse_proxy backend:8000 
+    }
     handle               {
- 	try_files {path} /index.html 
+ 	    try_files {path} /index.html 
     }
 
     header {
