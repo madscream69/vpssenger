@@ -18,7 +18,7 @@ export function connectWs() {
     set({ wsConnected: true });
     attachSignaling(ws);
   };
-  ws.onopen = () => set({ wsConnected: true });
+  //ws.onopen = () => set({ wsConnected: true });
 
   ws.onclose = () => {
     set({ wsConnected: false });
