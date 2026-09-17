@@ -27,19 +27,19 @@ class ConnectionManager:
             self._conns.pop(pubkey, None)
 
     async def send_to(self, pubkey: str, payload: dict) -> int:
-    conns = list(self._conns.get(pubkey, ()))
-    sent = 0
-    for ws in conns:
-        try:
-            await ws.send_json(payload)
-            sent += 1
-        except Exception as e:
-            log.warning("send_to %s failed: %s", pubkey[:12], e)
-            self.disconnect(pubkey, ws)
-    return sent
+        conns = list(self._conns.get(pubkey, ()))
+        sent = 0
+        for ws in conns:
+            try:
+                await ws.send_json(payload)
+                sent += 1
+            except Exception as e:
+                log.warning("send_to %s failed: %s", pubkey[:12], e)
+                self.disconnect(pubkey, ws)
+        return sent
     async def relay(self, from_pubkey: str, to_pubkey: str, payload: dict) -> int:
-    """Отправить payload от from_pubkey к to_pubkey. Возвращает число доставленных."""
-    return await self.send_to(to_pubkey, payload)
+        """Отправить payload от from_pubkey к to_pubkey. Возвращает число доставленных."""
+        return await self.send_to(to_pubkey, payload)
 
 
 manager = ConnectionManager()
