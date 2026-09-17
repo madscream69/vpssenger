@@ -47,6 +47,14 @@ services:
       - backend
     networks: [internal]
 
+    coturn:
+    image: coturn/coturn:4.6.2
+    restart: unless-stopped
+    network_mode: host              # ← важно: coturn должен видеть реальный IP
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    # Порты в network_mode: host пробрасываются напрямую, ports: не нужен.
+
 networks:
   internal:
     driver: bridge
