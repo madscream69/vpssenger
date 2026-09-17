@@ -31,5 +31,6 @@ class Settings(BaseSettings):
     turn_secret: str = ""
     turn_realm: str = ""
     turn_ttl_seconds: int = 3600
+    turn_host: str = ""
 
 settings = Settings()
