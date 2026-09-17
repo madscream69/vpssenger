@@ -5,10 +5,9 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 
 from app import redis_client as r
 from app.config import settings
-from app.routes import auth, messages, profile, push
+from app.routes import auth, messages, profile, push, turn
 from app.websocket import manager
 from fastapi.middleware.cors import CORSMiddleware
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,7 +47,7 @@ app.include_router(auth.router)
 app.include_router(messages.router)
 app.include_router(profile.router)
 app.include_router(push.router)
-
+app.include_router(turn.router)
 
 @app.websocket("/ws")
 async def ws_endpoint(

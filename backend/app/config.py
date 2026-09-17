@@ -28,4 +28,8 @@ class Settings(BaseSettings):
     vapid_public_key: str = ""
     vapid_subject: str = ""
 
+    turn_secret: str = ""
+    turn_realm: str = ""
+    turn_ttl_seconds: int = 3600
+
 settings = Settings()
