@@ -13,6 +13,10 @@ import {
 import * as api from "./api.js";
 import { connectWs, disconnectWs, onWsMessage } from "./ws.js";
 import * as contacts from "./contacts.js";
+import {
+  wireCallUi, startOutgoingCall,
+  showIncomingCall,
+} from "./call.js";
 function setView(view) {
   document.body.classList.toggle("view-list", view === "list");
   document.body.classList.toggle("view-chat", view === "chat");
@@ -215,13 +219,14 @@ onWsMessage(async (msg) => {
 // ---------- UI ----------
 
 function wireUi() {
+  wireCallUi();
   $("#back-btn").onclick = () => setView("list");
 
   $("#start-call").onclick = () => {
     if (!state.activePeer) return alert("Выбери контакт");
-    // Заглушка до 6.3
-    alert("Видеозвонки появятся в следующем обновлении");
-    // TODO: startCall(state.activePeer)
+    const peer = contacts.findContact(state.activePeer);
+    if (!peer) return alert("Контакт не найден");
+    startOutgoingCall({ edPub: peer.edPub, name: peer.name });
   };
   $("#gen-seed").onclick = () => {
     $("#mnemonic-input").value = generateMnemonic();

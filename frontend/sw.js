@@ -1,7 +1,7 @@
 // Service Worker: офлайн-шелл + push.
 // Кэшируем ТОЛЬКО статику приложения. API (/messages, /auth, /ws) — никогда.
 
-const CACHE = "fsm-shell-v1";
+const CACHE = "fsm-shell-v4"; 
 const SHELL = [
   "./",
   "./index.html",
@@ -15,6 +15,7 @@ const SHELL = [
   "./js/ws.js",
   "./js/contacts.js",
   "./manifest.json",
+  "./js/call.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];

@@ -333,6 +333,9 @@ textarea, input[type="text"] {
   object-fit: cover;
   background: #000;
 }
+#call-remote.cam-off {
+  background: #1a1a1a;
+}
 #call-local {
   position: absolute;
   top: 16px;
@@ -345,6 +348,9 @@ textarea, input[type="text"] {
   background: #000;
   z-index: 2;
 }
+#call-local.cam-off {
+  display: none;
+}
 .call-info {
   position: absolute;
   top: 16px;
@@ -353,7 +359,13 @@ textarea, input[type="text"] {
   text-shadow: 0 1px 4px rgba(0,0,0,.7);
 }
 #call-peer-name { font-weight: 600; font-size: 18px; }
-
+#call-state {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
 .call-controls {
   position: absolute;
   bottom: calc(24px + env(safe-area-inset-bottom));
