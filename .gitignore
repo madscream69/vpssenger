@@ -1,7 +1,32 @@
+# secrets
 .env
+.devkeys/
+
+# python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
+venv/
+.pytest_cache/
+
+# node
 node_modules/
+
+# build
 dist/
-.devkeys/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# logs
+*.log
+
+# docker volumes (если вдруг монтируются локально)
+caddy_data/
+caddy_config/
