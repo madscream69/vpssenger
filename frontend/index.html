@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="ru">
 <head>
-    <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#4f8cff">
-    <link rel="apple-touch-icon" href="./icons/icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FamilyMsg">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>vpssenger</title>
-    <link rel="stylesheet" href="./css/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Family Secure Messenger</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0e1116">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FamilyMsg">
+<link rel="stylesheet" href="./css/style.css">
 </head>
-<body>
+<body class="view-list">
 
 <!-- ЭКРАН 1: вход -->
 <section id="screen-login">
@@ -33,26 +33,78 @@
 
 <!-- ЭКРАН 2: мессенджер -->
 <section id="screen-chat">
+
+  <!-- Сайдбар / мобильный список чатов -->
   <aside id="sidebar">
-    <div class="me">
-      <span id="ws-status" class="off">○ offline</span>
-      <button id="copy-my-contact" title="Скопировать мой контакт">📋</button>
-      <button id="add-contact" title="Добавить контакт">＋</button>
-      <button id="logout" title="Выйти">⏻</button>
-      <button id="change-my-name" title="Сменить моё имя">⚙</button>
-    </div>
-    <div class="muted small">Я: <span id="me-id"></span></div>
+    <header class="sidebar-head">
+      <div class="me-row">
+        <span id="ws-status" class="off" title="Соединение">●</span>
+        <span class="me-name" id="me-name">(без имени)</span>
+      </div>
+      <div class="me-actions">
+        <button id="change-my-name" title="Сменить моё имя" aria-label="Сменить имя">✎</button>
+        <button id="copy-my-contact" title="Моя визитка" aria-label="Моя визитка">⧉</button>
+        <button id="add-contact" title="Добавить контакт" aria-label="Добавить контакт">＋</button>
+        <button id="logout" title="Выйти" aria-label="Выйти">⏻</button>
+      </div>
+    </header>
+
     <div id="contacts"></div>
+
+    <div class="sidebar-foot muted small">
+      <span id="me-id" title="Мой публичный ключ"></span>
+    </div>
   </aside>
 
-  <main>
-    <header id="chat-title">Выбери контакт</header>
+  <!-- Чат -->
+  <main id="chat-pane">
+    <header id="chat-header">
+      <button id="back-btn" class="icon-btn" title="Назад" aria-label="Назад">←</button>
+      <div class="chat-title-wrap">
+        <span id="chat-title">Выбери контакт</span>
+        <span id="chat-status" class="muted small"></span>
+      </div>
+      <button id="start-call" class="icon-btn" title="Позвонить" aria-label="Позвонить">📞</button>
+    </header>
+
     <div id="messages"></div>
-    <footer>
-      <textarea id="composer" rows="1" placeholder="Сообщение… (Enter — отправить)"></textarea>
-      <button id="send" class="primary">→</button>
+
+    <footer id="composer-row">
+      <textarea id="composer" rows="1" placeholder="Сообщение…" autocomplete="off"></textarea>
+      <button id="send" class="primary icon-btn" aria-label="Отправить">→</button>
     </footer>
   </main>
+</section>
+
+<!-- Оверлей звонка (пока только каркас) -->
+<section id="call-overlay" hidden>
+  <div class="call-container">
+    <video id="call-remote" autoplay playsinline></video>
+    <video id="call-local" autoplay playsinline muted></video>
+
+    <div class="call-info">
+      <div id="call-peer-name">—</div>
+      <div id="call-state" class="muted">звоним…</div>
+    </div>
+
+    <div class="call-controls">
+      <button id="call-toggle-mic" title="Микрофон">🎤</button>
+      <button id="call-toggle-cam" title="Камера">🎥</button>
+      <button id="call-hangup" class="danger" title="Завершить">✕</button>
+    </div>
+  </div>
+</section>
+
+<!-- Оверлей входящего звонка (пока только каркас) -->
+<section id="incoming-overlay" hidden>
+  <div class="incoming-card">
+    <div id="incoming-name">—</div>
+    <div class="muted">Входящий звонок</div>
+    <div class="incoming-actions">
+      <button id="incoming-decline" class="danger">Отклонить</button>
+      <button id="incoming-accept" class="primary">Принять</button>
+    </div>
+  </div>
 </section>
 
 <script type="module" src="./js/app.js"></script>

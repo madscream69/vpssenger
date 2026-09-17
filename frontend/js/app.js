@@ -13,7 +13,10 @@ import {
 import * as api from "./api.js";
 import { connectWs, disconnectWs, onWsMessage } from "./ws.js";
 import * as contacts from "./contacts.js";
-
+function setView(view) {
+  document.body.classList.toggle("view-list", view === "list");
+  document.body.classList.toggle("view-chat", view === "chat");
+}
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -212,6 +215,14 @@ onWsMessage(async (msg) => {
 // ---------- UI ----------
 
 function wireUi() {
+  $("#back-btn").onclick = () => setView("list");
+
+  $("#start-call").onclick = () => {
+    if (!state.activePeer) return alert("Выбери контакт");
+    // Заглушка до 6.3
+    alert("Видеозвонки появятся в следующем обновлении");
+    // TODO: startCall(state.activePeer)
+  };
   $("#gen-seed").onclick = () => {
     $("#mnemonic-input").value = generateMnemonic();
   };
@@ -286,7 +297,9 @@ function wireUi() {
 function render() {
   const logged = !!state.token;
   const myName = contacts.getMyName() || "(без имени)";
-  $("#me-id").textContent = myName;
+  $("#me-name").textContent = myName;
+  $("#me-id").textContent = state.edPub ? b64e(state.edPub).slice(0, 24) + "…" : "";
+  $("#me-id").title = state.edPub ? b64e(state.edPub) : "";
   $("#screen-login").style.display = logged ? "none" : "block";
   $("#screen-chat").style.display = logged ? "grid" : "none";
 
@@ -297,8 +310,8 @@ function render() {
   $("#me-id").title = b64e(state.edPub); // наведение покажет полный ключ
 
   // статус ws
-  $("#ws-status").textContent = state.wsConnected ? "● online" : "○ offline";
   $("#ws-status").className = state.wsConnected ? "on" : "off";
+  $("#ws-status").title = state.wsConnected ? "онлайн" : "оффлайн";
 
   // контакты
   const list = $("#contacts");
@@ -309,7 +322,10 @@ function render() {
     const last = [...state.messages].reverse().find((m) => m.from === c.edPub || m.to === c.edPub);
     el.innerHTML = `<div class="name">${escapeHtml(c.name)}</div>
                     <div class="last">${last ? escapeHtml((last._plain ?? "🔒").slice(0, 40)) : ""}</div>`;
-    el.onclick = () => set({ activePeer: c.edPub });
+    el.onclick = () => {
+      set({ activePeer: c.edPub });
+      setView("chat"); // на мобилке переключит на чат
+    };
     list.appendChild(el);
     // somnevaus
     el.onclick = () => set({ activePeer: c.edPub });
@@ -327,6 +343,7 @@ function render() {
   // чат
   const peer = state.activePeer ? contacts.findContact(state.activePeer) : null;
   $("#chat-title").textContent = peer ? peer.name : "Выбери контакт";
+  $("#chat-status").textContent = peer ? "" : "";
   const log = $("#messages");
   log.innerHTML = "";
   if (peer) {
@@ -345,6 +362,9 @@ function render() {
       log.appendChild(el);
     }
     log.scrollTop = log.scrollHeight;
+  }
+  if (state.activePeer === null && window.innerWidth <= 720) {
+    setView("list");
   }
 }
 

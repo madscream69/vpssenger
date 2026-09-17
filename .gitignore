@@ -30,3 +30,5 @@ build/
 # docker volumes (если вдруг монтируются локально)
 caddy_data/
 caddy_config/
+docker-compose.override.yml
+Caddyfile.local
