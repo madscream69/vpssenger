@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import time
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 
 from app.config import settings
 from app.deps import get_current_pubkey
@@ -15,15 +15,13 @@ router = APIRouter(prefix="/turn", tags=["turn"])
 async def get_turn_credentials(
     me: str = Depends(get_current_pubkey),
 ):
-    """Генерирует временные TURN-креды для текущего пользователя.
-
-    Формат username: "<expiry_unix>:<edPub>" — coturn с use-auth-secret
-    проверит HMAC и срок.
-    """
     expiry = int(time.time()) + settings.turn_ttl_seconds
-    username = f"{expiry}:{me}"
 
-    # HMAC-SHA1 от username с секретом.
+    # edPub в base64 содержит /, +, = — неудобно для coturn.
+    # Заменяем на hex-хеш — безопасная строка.
+    user_id = hashlib.sha256(me.encode()).hexdigest()[:32]
+    username = f"{expiry}:{user_id}"
+
     digest = hmac.new(
         settings.turn_secret.encode(),
         username.encode(),
@@ -40,7 +38,6 @@ async def get_turn_credentials(
             "turn:vpssenger.dolbit.fun:3478?transport=udp",
             "turn:vpssenger.dolbit.fun:3478?transport=tcp",
         ],
-        # Публичные STUN (бесплатные, не наши).
         "stun_uris": [
             "stun:stun.l.google.com:19302",
             "stun:stun1.l.google.com:19302",
