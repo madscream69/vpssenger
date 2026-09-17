@@ -96,16 +96,30 @@ function doLogout() {
 // ---------- Decrypt incoming ----------
 
 async function decryptAll({ retry = false } = {}) {
+  const { xSeed, edPub } = state;
+  let changed = false;
+
   for (const env of state.messages) {
+    const alreadyOk = env._plain !== undefined && env._plain !== null;
+    if (alreadyOk && !retry) continue;
+
+    // Если retry=true — пытаемся заново даже для тех, у кого _error.
+    // Если retry=false — обрабатываем только те, что ещё не пытались.
     if (!retry && env._plain !== undefined) continue;
+
+    const hadError = !!env._error;
     try {
       await decryptOne(env);
+      env._error = undefined;
+      changed = true;
     } catch (e) {
       env._plain = null;
       env._error = e.message;
+      if (!hadError) changed = true;
     }
   }
-  set({ messages: [...state.messages] });
+
+  if (changed) set({ messages: [...state.messages] });
 }
 
 async function decryptOne(env) {
@@ -247,7 +261,7 @@ function wireUi() {
       if (!raw) return;
       const c = contacts.importContactString(raw);
       contacts.addContact(c);
-      await decryptAll();
+      await decryptAll({ retry: true });
     } catch (e) { alert("Ошибка: " + e.message); }
   };
 
@@ -301,6 +315,7 @@ function wireUi() {
 
 function render() {
   const logged = !!state.token;
+  document.body.classList.toggle("auth-mode", !logged);
   const myName = contacts.getMyName() || "(без имени)";
   $("#me-name").textContent = myName;
   $("#me-id").textContent = state.edPub ? b64e(state.edPub).slice(0, 24) + "…" : "";
