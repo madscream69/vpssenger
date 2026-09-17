@@ -328,7 +328,31 @@ function render() {
     };
     list.appendChild(el);
     // somnevaus
-    el.onclick = () => set({ activePeer: c.edPub });
+    el.onclick = () => {
+      set({ activePeer: c.edPub });
+      setView("chat"); // на мобилке переключит на чат
+    };
+    let pressTimer = null;
+    el.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        const next = prompt("Новое имя для контакта:", c.name);
+        if (next == null) return;
+        try { contacts.renameContact(c.edPub, next); } catch (e) { alert(e.message); }
+      }, 600);
+    }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    });
+    el.addEventListener("touchmove", () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    });
     el.ondblclick = (ev) => {
       ev.preventDefault();
       const next = prompt("Новое имя для контакта:", c.name);
