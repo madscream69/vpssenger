@@ -20,13 +20,16 @@ CALL_RATE_TYPES = {
     "call-invite", "call-accept", "call-decline",
     "call-sdp", "call-ice", "call-end",
 }
+CALL_ICE_RATE_MAX = 300 
 MAX_CALL_MSG_BYTES = 64 * 1024
 
-def _call_rate_ok(pubkey: str) -> bool:
+
+def _call_rate_ok(pubkey: str, mtype: str) -> bool:
     now = time.time()
     window_start = now - CALL_RATE_WINDOW
     bucket = [t for t in _CALL_RATE[pubkey] if t > window_start]
-    if len(bucket) >= CALL_RATE_MAX:
+    limit = CALL_ICE_RATE_MAX if mtype == "call-ice" else CALL_RATE_MAX
+    if len(bucket) >= limit:
         return False
     bucket.append(now)
     _CALL_RATE[pubkey] = bucket

@@ -89,10 +89,22 @@ async function initOutgoing() {
         if (video) video.srcObject = stream;
       },
       onConnectionState: (s) => {
-        console.log("[call] outgoing pc state:", s);
-        if (s === "connected") setCallState({ phase: "active" });
-        if (s === "failed" || s === "closed" || s === "disconnected") {
+        console.log("[call] pc state:", s);
+        if (s === "connected") {
+          setCallState({ phase: "active" });
+        }
+        if (s === "failed" || s === "closed") {
           endCall("hangup");
+        }
+        if (s === "disconnected") {
+          // Ждём 8 секунд — может восстановиться.
+          console.warn("[call] disconnected, waiting for recovery...");
+          setTimeout(() => {
+            if (callState.peer?.pc?.connectionState === "disconnected") {
+              console.warn("[call] still disconnected, ending");
+              endCall("hangup");
+            }
+          }, 8000);
         }
       },
       onError: (e) => console.error("[call] outgoing pc error:", e),
