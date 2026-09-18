@@ -123,7 +123,7 @@ async def ws_endpoint(
                 continue
 
             if mtype in CALL_RATE_TYPES:
-                if not _call_rate_ok(pubkey):
+                if not _call_rate_ok(pubkey, mtype):
                     await websocket.send_json({
                         "type": "call-rate-limited",
                     })
