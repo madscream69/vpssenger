@@ -14,8 +14,15 @@ import * as api from "./api.js";
 import { connectWs, disconnectWs, onWsMessage } from "./ws.js";
 import * as contacts from "./contacts.js";
 import {
-  wireCallUi, startOutgoingCall,
-  showIncomingCall,
+  wireCallUi,
+  startOutgoingCall,
+  handleIncomingInvite,
+  handleIncomingAccept,
+  handleIncomingDecline,
+  handleIncomingSdp,
+  handleIncomingIce,
+  handleIncomingEnd,
+  handleUnreachable,
 } from "./call.js";
 import { onSignal, sendSignal } from "./callSignaling.js";
 function setView(view) {
@@ -32,31 +39,36 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 function registerCallHandlers() {
   onSignal("call-invite", (msg) => {
     console.log("INCOMING CALL", msg);
-    // TODO 6.3.4: showIncomingCall({ edPub: msg.from, name: ... })
+    handleIncomingInvite(msg);
   });
 
   onSignal("call-accept", (msg) => {
     console.log("CALL ACCEPTED", msg);
+    handleIncomingAccept(msg);
   });
 
   onSignal("call-decline", (msg) => {
     console.log("CALL DECLINED", msg);
+    handleIncomingDecline(msg);
   });
 
   onSignal("call-sdp", (msg) => {
     console.log("SDP", msg.kind, msg.from?.slice(0, 12));
+    handleIncomingSdp(msg);
   });
 
   onSignal("call-ice", (msg) => {
-    console.log("ICE", msg.from?.slice(0, 12));
+    handleIncomingIce(msg);
   });
 
   onSignal("call-end", (msg) => {
     console.log("CALL ENDED", msg.reason);
+    handleIncomingEnd(msg);
   });
 
   onSignal("call-unreachable", (msg) => {
     console.log("CALL UNREACHABLE", msg.to?.slice(0, 12));
+    handleUnreachable(msg);
   });
 
   onSignal("call-rate-limited", () => {
@@ -67,7 +79,7 @@ function registerCallHandlers() {
     console.warn("Call error:", msg.error);
   });
 
-  // Отладочный хелпер для проверки сигналинга через консоль.
+  // Отладочный хелпер для тестов (как раньше).
   window.fsmCallDebug = window.fsmCallDebug || {};
   window.fsmCallDebug.testSignal = (toEdPub) => {
     const callId = "test-" + Math.random().toString(36).slice(2, 10);
