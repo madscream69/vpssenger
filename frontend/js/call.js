@@ -24,6 +24,32 @@ export const callState = {
   incomingOffer: null,   // для случая, когда offer приходит раньше, чем accept
 };
 
+let disconnectedTimer = null;
+
+function clearDisconnectedTimer() {
+  if (disconnectedTimer) {
+    clearTimeout(disconnectedTimer);
+    disconnectedTimer = null;
+  }
+}
+
+function startDisconnectedTimer() {
+  clearDisconnectedTimer();
+  setCallState({ phase: "reconnecting" });
+  disconnectedTimer = setTimeout(() => {
+    disconnectedTimer = null;
+    const pc = callState.peer?.pc;
+    if (
+      pc &&
+      (pc.connectionState === "disconnected" ||
+        pc.iceConnectionState === "disconnected")
+    ) {
+      console.warn("[call] still disconnected after 20s, ending");
+      endCall("network");
+    }
+  }, 20000);
+}
+
 // Подписчики
 const subs = new Set();
 function emit() { for (const fn of subs) fn(callState); }
@@ -76,7 +102,7 @@ export function startOutgoingCall(peer) {
 async function initOutgoing() {
   const { peerEdPub, callId } = callState;
   if (!peerEdPub || !callId) return;
-
+  
   // 1. Локальный стрим + peer
   const handle = await rtc.createPeer({
     callId,
@@ -92,19 +118,14 @@ async function initOutgoing() {
         console.log("[call] pc state:", s);
         if (s === "connected") {
           setCallState({ phase: "active" });
+          clearDisconnectedTimer();
         }
         if (s === "failed" || s === "closed") {
           endCall("hangup");
         }
         if (s === "disconnected") {
-          // Ждём 8 секунд — может восстановиться.
           console.warn("[call] disconnected, waiting for recovery...");
-          setTimeout(() => {
-            if (callState.peer?.pc?.connectionState === "disconnected") {
-              console.warn("[call] still disconnected, ending");
-              endCall("hangup");
-            }
-          }, 8000);
+          startDisconnectedTimer();
         }
       },
       onError: (e) => console.error("[call] outgoing pc error:", e),
@@ -174,10 +195,17 @@ export async function acceptIncomingCall() {
           if (video) video.srcObject = stream;
         },
         onConnectionState: (s) => {
-          console.log("[call] incoming pc state:", s);
-          if (s === "connected") setCallState({ phase: "active" });
-          if (s === "failed" || s === "closed" || s === "disconnected") {
+          console.log("[call] pc state:", s);
+          if (s === "connected") {
+            setCallState({ phase: "active" });
+            clearDisconnectedTimer();
+          }
+          if (s === "failed" || s === "closed") {
             endCall("hangup");
+          }
+          if (s === "disconnected") {
+            console.warn("[call] disconnected, waiting for recovery...");
+            startDisconnectedTimer();
           }
         },
         onError: (e) => console.error("[call] incoming pc error:", e),
@@ -244,6 +272,7 @@ export function declineIncomingCall() {
 }
 
 export function endCall(reason = "hangup") {
+  clearDisconnectedTimer();
   const { peer, peerEdPub, callId } = callState;
 
   if (peerEdPub && callId) {
@@ -384,11 +413,15 @@ function renderCallUi() {
       ringing: callState.direction === "outgoing" ? "звоним…" : "входящий…",
       connecting: "соединение…",
       active: "звонок",
+      reconnecting: "проблема с сетью, восстанавливаем…",
       ended: "завершён",
       idle: "",
     }[callState.phase] || "";
     const stateEl = $("#call-state");
-    if (stateEl) stateEl.textContent = phaseText;
+    if (stateEl) {
+      stateEl.textContent = phaseText;
+      stateEl.classList.toggle("warn", callState.phase === "reconnecting");
+    }
 
     const micBtn = $("#call-toggle-mic");
     const camBtn = $("#call-toggle-cam");

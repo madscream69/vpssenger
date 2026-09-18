@@ -379,6 +379,10 @@ textarea, input[type="text"] {
 #call-state {
   animation: pulse 1.6s ease-in-out infinite;
 }
+#call-state.warn {
+  color: #ffcc44;
+  animation: pulse 1.6s ease-in-out infinite;
+}
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .5; }
