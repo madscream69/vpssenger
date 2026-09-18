@@ -142,6 +142,10 @@ export async function createPeer({ callId, peerEdPub, initiator, handlers = {} }
   // Состояние соединения
   pc.onconnectionstatechange = () => {
     if (onConnectionState) onConnectionState(pc.connectionState);
+    if (pc.connectionState === "connected") {
+        console.log("[webrtc] LOCAL SDP:\\n", pc.localDescription?.sdp);
+        console.log("[webrtc] REMOTE SDP:\\n", pc.remoteDescription?.sdp);
+    }
   };
 
   pc.oniceconnectionstatechange = () => {
@@ -152,6 +156,10 @@ export async function createPeer({ callId, peerEdPub, initiator, handlers = {} }
     console.warn("[webrtc] pc error:", e);
     if (onError) onError(e.error || new Error("pc error"));
   };
+  pc.onsignalingstatechange = () => {
+    console.log("[webrtc] signaling state:", pc.signalingState);
+  };
+
 
   // 6. Хэндл для управления
   let closed = false;
