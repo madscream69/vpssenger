@@ -1,9 +1,8 @@
 // Подписи и AEAD. Публичные ключи — base64 (совместимо с backend).
 // Всё через @noble/curves — Ed25519, X25519 и SHA-512 встроены.
 
-import { ed25519, x25519 } from "https://esm.sh/@noble/curves@1.6.0/ed25519";
-import { xchacha20poly1305 } from "https://esm.sh/@noble/ciphers@1.0.0/chacha";
-
+import { ed25519, x25519 } from "../vendor/curves-ed25519.bundle.mjs";
+import { xchacha20poly1305 } from "../vendor/ciphers-chacha.bundle.mjs";
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 

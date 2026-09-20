@@ -1,9 +1,8 @@
 // BIP39 + деривация Ed25519/X25519 из сид-фразы.
 // Все ключи выводятся детерминированно; ничего не сохраняется.
 
-import * as bip39 from "https://esm.sh/@scure/bip39@1.4.0";
-import { wordlist } from "https://esm.sh/@scure/bip39@1.4.0/wordlists/english";
-
+import * as bip39 from "../vendor/bip39.bundle.mjs";
+import { wordlist } from "../vendor/bip39-wordlist-english.bundle.mjs";
 const enc = new TextEncoder();
 
 async function hkdf(ikm, info, length) {
