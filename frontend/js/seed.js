@@ -1,8 +1,25 @@
 // BIP39 + деривация Ed25519/X25519 из сид-фразы.
 // Все ключи выводятся детерминированно; ничего не сохраняется.
 
-import * as bip39 from "../vendor/bip39.bundle.mjs";
-import wordlist from "../vendor/bip39-wordlist-english.bundle.mjs";
+import bip39 from "../vendor/bip39.bundle.mjs";
+import wordlistMod from "../vendor/bip39-wordlist-english.bundle.mjs";
+
+// esbuild упаковал всё в default. Достаём нужное оттуда.
+const wordlist = wordlistMod.wordlist || wordlistMod.default || wordlistMod;
+
+if (!Array.isArray(wordlist) || wordlist.length < 100) {
+  throw new Error(
+    "wordlist не загрузился: type=" + typeof wordlist +
+    " keys=" + Object.keys(wordlistMod).join(",")
+  );
+}
+
+if (typeof bip39.generateMnemonic !== "function") {
+  throw new Error(
+    "bip39 не загрузился: keys=" + Object.keys(bip39).join(",")
+  );
+}
+
 const enc = new TextEncoder();
 
 async function hkdf(ikm, info, length) {

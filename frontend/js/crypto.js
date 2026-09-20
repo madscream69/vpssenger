@@ -1,8 +1,25 @@
 // Подписи и AEAD. Публичные ключи — base64 (совместимо с backend).
 // Всё через @noble/curves — Ed25519, X25519 и SHA-512 встроены.
 
-import { ed25519, x25519 } from "../vendor/curves-ed25519.bundle.mjs";
-import { xchacha20poly1305 } from "../vendor/ciphers-chacha.bundle.mjs";
+import curvesMod from "../vendor/curves-ed25519.bundle.mjs";
+import ciphersMod from "../vendor/ciphers-chacha.bundle.mjs";
+
+// esbuild упаковал всё в default. Достаём нужное оттуда.
+const { ed25519, x25519 } = curvesMod;
+const { xchacha20poly1305 } = ciphersMod;
+
+if (!ed25519 || !x25519) {
+  throw new Error(
+    "curves не загрузились: keys=" + Object.keys(curvesMod).join(",")
+  );
+}
+
+if (typeof xchacha20poly1305 !== "function") {
+  throw new Error(
+    "ciphers не загрузились: keys=" + Object.keys(ciphersMod).join(",")
+  );
+}
+
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
