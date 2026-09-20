@@ -4,6 +4,8 @@
 import { state } from "./state.js";
 import { sendSignal, onSignal } from "./callSignaling.js";
 import * as rtc from "./webrtc.js";
+import { b64e } from "./crypto.js";
+import { signSdp, verifySdp } from "./callSignaling.js";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -236,12 +238,20 @@ async function processIncomingOffer(sdp) {
 
   try {
     const answerSdp = await rtc.handleOffer(peer.pc, sdp);
-    sendSignal({
-      type: "call-sdp",
+
+    const payload = {
+      from: b64e(state.edPub),
       to: peerEdPub,
       callId,
       kind: "answer",
       sdp: answerSdp,
+    };
+    const sig = signSdp(payload);
+
+    sendSignal({
+      type: "call-sdp",
+      ...payload,
+      sig,
     });
   } catch (e) {
     console.error("[call] handleOffer failed:", e);
@@ -337,12 +347,20 @@ export async function handleIncomingAccept(msg) {
 
   try {
     const offerSdp = await rtc.createOffer(peer.pc);
-    sendSignal({
-      type: "call-sdp",
+
+    const payload = {
+      from: b64e(state.edPub),
       to: peerEdPub,
       callId,
       kind: "offer",
       sdp: offerSdp,
+    };
+    const sig = signSdp(payload);
+
+    sendSignal({
+      type: "call-sdp",
+      ...payload,
+      sig,
     });
     setCallState({ phase: "connecting" });
   } catch (e) {
@@ -358,11 +376,33 @@ export function handleIncomingDecline(msg) {
 }
 
 export async function handleIncomingSdp(msg) {
-  const { peer, peerEdPub, callId } = callState;
+  const { peer, callId } = callState;
   if (msg.callId !== callId) return;
 
+  // Проверяем подпись — иначе MITM может подменить SDP.
+  if (!msg.sig) {
+    console.warn("[call] SDP без подписи, отклоняем");
+    endCall("bad-sig");
+    return;
+  }
+
+  const payload = {
+    from: msg.from,
+    to: b64e(state.edPub),  // we are the "to"
+    callId: msg.callId,
+    kind: msg.kind,
+    sdp: msg.sdp,
+  };
+
+  if (!verifySdp(payload, msg.sig)) {
+    console.error("[call] подпись SDP неверна, отклоняем соединение");
+    endCall("bad-sig");
+    return;
+  }
+
+  console.log("[call] SDP signature OK");
+
   if (msg.kind === "offer") {
-    // Если peer ещё нет — сохраняем offer до accept.
     if (!peer) {
       setCallState({ incomingOffer: msg.sdp });
       return;

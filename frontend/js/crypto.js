@@ -78,6 +78,16 @@ export function canonicalMessageBytes(msgIdBytes, fromPub, toPub, ts, nonce, ct)
   return out;
 }
 
+export function canonicalSdpBytes({ from, to, callId, kind, sdp }) {
+  const text =
+    "fsm-sdp-v1\n" +
+    from + "\n" +
+    to + "\n" +
+    callId + "\n" +
+    kind + "\n" +
+    sdp;
+  return enc.encode(text);
+}
 // ---------- Ed25519 ----------
 
 export function ed25519GetPublicKey(seed32) {
