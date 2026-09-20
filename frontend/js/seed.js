@@ -2,7 +2,7 @@
 // Все ключи выводятся детерминированно; ничего не сохраняется.
 
 import * as bip39 from "../vendor/bip39.bundle.mjs";
-import { wordlist } from "../vendor/bip39-wordlist-english.bundle.mjs";
+import wordlist from "../vendor/bip39-wordlist-english.bundle.mjs";
 const enc = new TextEncoder();
 
 async function hkdf(ikm, info, length) {
