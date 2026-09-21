@@ -112,9 +112,21 @@ export async function createPeer({ callId, peerEdPub, initiator, handlers = {} }
   // 3. RTCPeerConnection
   const pc = new RTCPeerConnection({ iceServers });
 
-  // 4. Привязка локальных треков
-  for (const track of localStream.getTracks()) {
-    pc.addTrack(track, localStream);
+  // 4. Привязка локальных треков — всегда объявляем audio и video секции,
+  // чтобы одна сторона без камеры не ломала видео у другой.
+  const audioTrack = localStream.getAudioTracks()[0];
+  const videoTrack = localStream.getVideoTracks()[0];
+
+  if (audioTrack) {
+    pc.addTransceiver(audioTrack, { direction: "sendrecv", streams: [localStream] });
+  } else {
+    pc.addTransceiver("audio", { direction: "recvonly" });
+  }
+
+  if (videoTrack) {
+    pc.addTransceiver(videoTrack, { direction: "sendrecv", streams: [localStream] });
+  } else {
+    pc.addTransceiver("video", { direction: "recvonly" });
   }
 
   // 5. Обработчики
