@@ -487,3 +487,45 @@ textarea, input[type="text"] {
   justify-content: center;
   flex-wrap: wrap;
 }
+/* ─── Заглушки, если нет видео ─── */
+
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  color: #e6e8ec;
+  z-index: 1;
+  gap: 12px;
+}
+.video-placeholder[hidden] { display: none; }
+
+.video-placeholder .placeholder-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+.video-placeholder .placeholder-text {
+  font-size: 14px;
+  opacity: 0.8;
+  text-align: center;
+  padding: 0 16px;
+}
+
+/* Маленький placeholder для своего видео */
+.video-placeholder.small {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 120px;
+  height: 160px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, .3);
+  z-index: 2;
+  gap: 4px;
+}
+.video-placeholder.small .placeholder-text {
+  font-size: 11px;
+}

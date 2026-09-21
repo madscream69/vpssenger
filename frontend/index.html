@@ -80,7 +80,18 @@
 <section id="call-overlay" hidden>
   <div class="call-container">
     <video id="call-remote" autoplay playsinline></video>
+
+    <div id="call-remote-placeholder" class="video-placeholder" hidden>
+      <div class="placeholder-icon">📷</div>
+      <div class="placeholder-text">Камера собеседника недоступна</div>
+    </div>
+
     <video id="call-local" autoplay playsinline muted></video>
+
+    <!-- Заглушка, если у нас нет камеры -->
+    <div id="call-local-placeholder" class="video-placeholder small" hidden>
+      <div class="placeholder-text">Нет камеры</div>
+    </div>
 
     <div class="call-info">
       <div id="call-peer-name">—</div>

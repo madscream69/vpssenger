@@ -112,9 +112,10 @@ async function initOutgoing() {
     initiator: true,
     handlers: {
       onRemoteStream: (stream) => {
-        callState.remoteStream = stream;
+        //callState.remoteStream = stream;
         const video = $("#call-remote");
         if (video) video.srcObject = stream;
+        setCallState({ remoteStream: stream });
       },
       onConnectionState: (s) => {
         console.log("[call] pc state:", s);
@@ -466,9 +467,35 @@ function renderCallUi() {
     const micBtn = $("#call-toggle-mic");
     const camBtn = $("#call-toggle-cam");
     if (micBtn) micBtn.classList.toggle("off", !callState.micEnabled);
-    if (camBtn) camBtn.classList.toggle("off", !callState.camEnabled);
+
+    // Камера: реальная кнопка не работает, если у нас нет видео-трека.
+    const hasVideo = callState.peer?.videoEnabled === true;
+    if (camBtn) {
+      camBtn.classList.toggle("off", !callState.camEnabled);
+      camBtn.style.display = hasVideo ? "" : "none";   // ← прячем, если видео нет
+    }
+
+    // Своё видео: если камеры нет — скрываем и показываем заглушку.
+    const localVideo = $("#call-local");
+    const localPlaceholder = $("#call-local-placeholder");
+    if (localVideo) {
+      localVideo.style.display = (hasVideo && callState.camEnabled) ? "" : "none";
+    }
+    if (localPlaceholder) {
+      localPlaceholder.hidden = hasVideo && callState.camEnabled;
+    }
   } else {
     if (overlay) overlay.hidden = true;
+  }
+  // Видео собеседника — есть ли трек?
+  const remoteVideo = $("#call-remote");
+  const remotePlaceholder = $("#call-remote-placeholder");
+  const remoteHasVideo = !!callState.remoteStream?.getVideoTracks?.()[0];
+  if (remoteVideo) {
+    remoteVideo.style.display = remoteHasVideo ? "" : "none";
+  }
+  if (remotePlaceholder) {
+    remotePlaceholder.hidden = remoteHasVideo;
   }
 }
 

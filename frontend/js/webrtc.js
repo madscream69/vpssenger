@@ -20,21 +20,26 @@ export async function getLocalStream() {
     throw new Error("getUserMedia не поддерживается этим браузером");
   }
 
-  // Сначала пробуем видео+аудио.
+  // 1. Сначала пробуем видео + аудио
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: { echoCancellation: true, noiseSuppression: true },
     });
+    console.log("[webrtc] video+audio ok");
     return { stream, videoEnabled: true };
   } catch (e) {
-    if (e.name === "NotFoundError" || e.name === "OverconstrainedError") {
-      // Нет камеры — пробуем только аудио.
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      return { stream, videoEnabled: false };
-    }
-    // NotAllowedError, SecurityError и прочее — пробрасываем.
-    throw e;
+    console.warn("[webrtc] video+audio failed:", e.name, e.message);
+  }
+
+  // 2. Fallback — только аудио
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    console.warn("[webrtc] audio-only mode");
+    return { stream, videoEnabled: false };
+  } catch (e2) {
+    console.error("[webrtc] audio-only failed too:", e2.name, e2.message);
+    throw e2;
   }
 }
 
