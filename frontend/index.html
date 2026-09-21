@@ -106,7 +106,33 @@
     </div>
   </div>
 </section>
+<!-- Модалка: мой QR -->
+<section id="qr-show-overlay" hidden>
+  <div class="qr-card">
+    <h2>Мой контакт</h2>
+    <canvas id="qr-show-canvas" width="280" height="280"></canvas>
+    <div class="muted small" id="qr-my-name"></div>
+    <div class="qr-actions">
+      <button id="qr-copy-string">Скопировать строку</button>
+      <button id="qr-show-close" class="primary">Закрыть</button>
+    </div>
+  </div>
+</section>
 
+<!-- Модалка: сканирование QR -->
+<section id="qr-scan-overlay" hidden>
+  <div class="qr-card">
+    <h2>Сканировать QR</h2>
+    <div class="qr-video-wrap">
+      <video id="qr-scan-video" playsinline muted></video>
+      <canvas id="qr-scan-canvas" style="display:none;"></canvas>
+    </div>
+    <div class="muted small" id="qr-scan-status">Наведи камеру на QR-код</div>
+    <div class="qr-actions">
+      <button id="qr-scan-cancel">Отмена</button>
+    </div>
+  </div>
+</section>
 <script type="module" src="./js/app.js"></script>
 </body>
 </html>

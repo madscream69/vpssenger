@@ -24,6 +24,12 @@ import {
   handleIncomingEnd,
   handleUnreachable,
 } from "./call.js";
+import {
+  renderMyQr,
+  buildMyContactString,
+  startScan,
+  stopScan,
+} from "./qr.js";
 import { onSignal, sendSignal } from "./callSignaling.js";
 function setView(view) {
   document.body.classList.toggle("view-list", view === "list");
@@ -311,6 +317,35 @@ onWsMessage(async (msg) => {
 
 function wireUi() {
   wireCallUi();
+  // ─── QR: мой контакт ───
+  const qrShow = $("#qr-show-overlay");
+  const qrShowCanvas = $("#qr-show-canvas");
+
+  $("#qr-show-close").onclick = () => {
+    qrShow.hidden = true;
+  };
+
+  $("#qr-copy-string").onclick = async () => {
+    const s = buildMyContactString();
+    try {
+      await navigator.clipboard.writeText(s);
+      alert("Строка контакта скопирована");
+    } catch {
+      prompt("Скопируй вручную:", s);
+    }
+  };
+
+  // ─── QR: сканирование ───
+  const qrScan = $("#qr-scan-overlay");
+  const qrScanVideo = $("#qr-scan-video");
+  const qrScanCanvas = $("#qr-scan-canvas");
+  const qrScanStatus = $("#qr-scan-status");
+
+  $("#qr-scan-cancel").onclick = () => {
+    stopScan();
+    qrScan.hidden = true;
+  };
+
   $("#back-btn").onclick = () => setView("list");
 
   $("#start-call").onclick = () => {
@@ -333,30 +368,37 @@ function wireUi() {
   $("#logout").onclick = doLogout;
 
   $("#add-contact").onclick = async () => {
-    try {
+  // Спрашиваем способ
+    const useScanner = confirm(
+      "Добавить контакт:\n\n" +
+      "OK — сканировать QR\n" +
+      "Отмена — вставить строку вручную"
+    );
+
+    if (useScanner) {
+      qrScan.hidden = false;
+      qrScanStatus.textContent = "Наведи камеру на QR-код";
+      try {
+        await startScan(qrScanVideo, qrScanCanvas, (scanned) => {
+          qrScan.hidden = true;
+          handleIncomingContactString(scanned);
+        });
+      } catch (e) {
+        qrScan.hidden = true;
+        alert("Не удалось открыть камеру: " + e.message);
+      }
+    } else {
       const raw = prompt("Вставь строку контакта (fsm1:name:edPub:xPub):");
       if (!raw) return;
-      const c = contacts.importContactString(raw);
-      contacts.addContact(c);
-      await decryptAll({ retry: true });
-    } catch (e) { alert("Ошибка: " + e.message); }
+      handleIncomingContactString(raw.trim());
+    }
   };
 
   $("#copy-my-contact").onclick = async () => {
-    try {
-      const myName = contacts.askMyNameIfMissing();
-      const line = contacts.exportContact({
-        name: myName,
-        edPub: b64e(state.edPub),
-        xPub: b64e(state.xPub),
-      });
-      try {
-        await navigator.clipboard.writeText(line);
-        alert("Скопировано. Отправь это родственнику:\n\n" + line);
-      } catch {
-        prompt("Скопируй вручную:", line);
-      }
-    } catch (e) { alert(e.message); }
+    const contactString = buildMyContactString();
+    await renderMyQr(qrShowCanvas, contactString);
+    $("#qr-my-name").textContent = contacts.getMyName() || "(без имени)";
+    qrShow.hidden = false;
   };
 
   $("#send").onclick = async () => {
@@ -387,7 +429,16 @@ function wireUi() {
   } catch (e) { alert(e.message); }
 };
 }
-
+async function handleIncomingContactString(raw) {
+  try {
+    const c = contacts.importContactString(raw);
+    contacts.addContact(c);
+    await decryptAll({ retry: true });
+    alert(`Контакт «${c.name}» добавлен`);
+  } catch (e) {
+    alert("Ошибка: " + e.message);
+  }
+}
 // ---------- Render ----------
 
 function render() {

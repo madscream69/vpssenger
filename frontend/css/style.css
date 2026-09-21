@@ -427,3 +427,63 @@ textarea, input[type="text"] {
   flex: 1;
   padding: 12px;
 }
+/* ─── QR-модалки ─── */
+
+#qr-show-overlay,
+#qr-scan-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .85);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#qr-show-overlay[hidden],
+#qr-scan-overlay[hidden] { display: none; }
+
+.qr-card {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.qr-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.qr-card canvas {
+  background: #fff;
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-video-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+#qr-scan-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
