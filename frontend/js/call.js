@@ -328,6 +328,16 @@ export function toggleCam() {
   const tracks = callState.peer?.localStream?.getVideoTracks() || [];
   for (const t of tracks) t.enabled = next;
   setCallState({ camEnabled: next });
+
+  // обновляем отображение своего видео
+  const localVideo = document.querySelector("#call-local");
+  if (localVideo) {
+    localVideo.style.display = (next && callState.peer?.videoEnabled) ? "" : "none";
+  }
+  const localPlaceholder = document.querySelector("#call-local-placeholder");
+  if (localPlaceholder) {
+    localPlaceholder.hidden = !!(next && callState.peer?.videoEnabled) === false ? false : true;
+  }
 }
 
 // ─── обработчики входящих сигналов ───
