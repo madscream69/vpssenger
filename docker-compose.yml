@@ -47,7 +47,7 @@ services:
       - backend
     networks: [internal]
 
-    coturn:
+  coturn:
     image: coturn/coturn:4.6.2
     restart: unless-stopped
     network_mode: host              # ← важно: coturn должен видеть реальный IP
