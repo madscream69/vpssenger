@@ -238,7 +238,7 @@ async function processIncomingOffer(sdp) {
   if (!peer || !peerEdPub) return;
 
   try {
-    const answerSdp = await rtc.handleOffer(peer.pc, sdp);
+    const answerSdp = await rtc.handleOffer(peer.pc, sdp, peer.localStream);
 
     const payload = {
       from: b64e(state.edPub),

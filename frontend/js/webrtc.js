@@ -112,21 +112,28 @@ export async function createPeer({ callId, peerEdPub, initiator, handlers = {} }
   // 3. RTCPeerConnection
   const pc = new RTCPeerConnection({ iceServers });
 
-  // 4. Привязка локальных треков — всегда объявляем audio и video секции,
-  // чтобы одна сторона без камеры не ломала видео у другой.
+  // 4. Привязка локальных треков
   const audioTrack = localStream.getAudioTracks()[0];
   const videoTrack = localStream.getVideoTracks()[0];
 
-  if (audioTrack) {
-    pc.addTransceiver(audioTrack, { direction: "sendrecv", streams: [localStream] });
-  } else {
-    pc.addTransceiver("audio", { direction: "recvonly" });
-  }
+  if (initiator) {
+    // Инициатор объявляет секции явно.
+    if (audioTrack) {
+      pc.addTransceiver(audioTrack, { direction: "sendrecv", streams: [localStream] });
+    } else {
+      pc.addTransceiver("audio", { direction: "recvonly" });
+    }
 
-  if (videoTrack) {
-    pc.addTransceiver(videoTrack, { direction: "sendrecv", streams: [localStream] });
+    if (videoTrack) {
+      pc.addTransceiver(videoTrack, { direction: "sendrecv", streams: [localStream] });
+    } else {
+      pc.addTransceiver("video", { direction: "recvonly" });
+    }
   } else {
-    pc.addTransceiver("video", { direction: "recvonly" });
+    // Отвечающий НЕ создаёт transceivers до offer. Сохраняем треки,
+    // добавим их после setRemoteDescription(offer).
+    // Если трек есть — сохраняем в handle для последующего addTrack.
+    // Здесь ничего не делаем.
   }
 
   // 5. Обработчики
@@ -207,8 +214,14 @@ export async function createOffer(pc) {
  * Обработать входящий offer: setRemoteDescription + createAnswer.
  * Возвращает SDP-строку answer для отправки.
  */
-export async function handleOffer(pc, sdp) {
+export async function handleOffer(pc, sdp, localStream = null) {
   await pc.setRemoteDescription({ type: "offer", sdp });
+
+  // Привязываем свои локальные треки к transceivers, созданным offer'ом.
+  if (localStream) {
+    attachLocalTracks(pc, localStream);
+  }
+
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
   return pc.localDescription.sdp;
@@ -233,5 +246,33 @@ export async function handleRemoteIce(pc, candidate) {
     });
   } catch (e) {
     console.warn("[webrtc] addIceCandidate failed:", e);
+  }
+}
+/**
+ * Для отвечающего: после setRemoteDescription(offer) — привязать
+ * свои локальные треки к уже существующим transceiver'ам.
+ */
+export function attachLocalTracks(pc, localStream) {
+  const audio = localStream.getAudioTracks()[0];
+  const video = localStream.getVideoTracks()[0];
+
+  if (audio) {
+    const t = pc.getTransceivers().find((t) => t.receiver.track?.kind === "audio" || t.mid === "0");
+    if (t && !t.sender.track) {
+      t.sender.replaceTrack(audio);
+      t.direction = "sendrecv";
+    } else if (!t) {
+      pc.addTrack(audio, localStream);
+    }
+  }
+
+  if (video) {
+    const t = pc.getTransceivers().find((t) => t.receiver.track?.kind === "video" || t.mid === "1");
+    if (t && !t.sender.track) {
+      t.sender.replaceTrack(video);
+      t.direction = "sendrecv";
+    } else if (!t) {
+      pc.addTrack(video, localStream);
+    }
   }
 }
