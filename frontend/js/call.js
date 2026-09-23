@@ -323,21 +323,50 @@ export function toggleMic() {
   setCallState({ micEnabled: next });
 }
 
-export function toggleCam() {
-  const next = !callState.camEnabled;
-  const tracks = callState.peer?.localStream?.getVideoTracks() || [];
-  for (const t of tracks) t.enabled = next;
-  setCallState({ camEnabled: next });
+export async function toggleCam() {
+  const peer = callState.peer;
+  if (!peer) return;
 
-  // обновляем отображение своего видео
-  const localVideo = document.querySelector("#call-local");
-  if (localVideo) {
-    localVideo.style.display = (next && callState.peer?.videoEnabled) ? "" : "none";
+  const next = !callState.camEnabled;
+
+  if (!next) {
+    // Выключаем камеру: останавливаем видеотреки и подменяем на null.
+    const videoTrack = peer.localStream?.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.stop();
+      peer.localStream.removeTrack(videoTrack);
+    }
+    for (const sender of peer.pc.getSenders()) {
+      if (sender.track?.kind === "video") {
+        try { await sender.replaceTrack(null); } catch (e) { console.warn(e); }
+      }
+    }
+  } else {
+    // Включаем камеру: получаем новый трек и подменяем.
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      peer.localStream.addTrack(newTrack);
+
+      for (const sender of peer.pc.getSenders()) {
+        if (sender.track === null || sender.track?.kind === "video") {
+          try { await sender.replaceTrack(newTrack); break; } catch (e) { console.warn(e); }
+        }
+      }
+
+      // Обновляем локальное видео
+      const localVideo = document.querySelector("#call-local");
+      if (localVideo) localVideo.srcObject = peer.localStream;
+    } catch (e) {
+      console.error("[call] toggleCam on failed:", e);
+      alert("Не удалось включить камеру: " + e.message);
+      return;
+    }
   }
-  const localPlaceholder = document.querySelector("#call-local-placeholder");
-  if (localPlaceholder) {
-    localPlaceholder.hidden = !!(next && callState.peer?.videoEnabled) === false ? false : true;
-  }
+
+  setCallState({ camEnabled: next });
 }
 
 // ─── обработчики входящих сигналов ───
