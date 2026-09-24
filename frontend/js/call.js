@@ -24,6 +24,8 @@ export const callState = {
   peer: null,            // PeerHandle из webrtc.js
   remoteStream: null,
   incomingOffer: null,   // для случая, когда offer приходит раньше, чем accept
+  remoteMicOn: true,      // ← новое
+  remoteCamOn: true,      // ← новое
 };
 
 let disconnectedTimer = null;
@@ -321,6 +323,9 @@ export function toggleMic() {
   const tracks = callState.peer?.localStream?.getAudioTracks() || [];
   for (const t of tracks) t.enabled = next;
   setCallState({ micEnabled: next });
+
+  // Отправляем состояние собеседнику
+  sendCallState();
 }
 
 export async function toggleCam() {
@@ -367,6 +372,7 @@ export async function toggleCam() {
   }
 
   setCallState({ camEnabled: next });
+  sendCallState();  
 }
 
 // ─── обработчики входящих сигналов ───
@@ -517,24 +523,39 @@ function renderCallUi() {
     // Своё видео: если камеры нет — скрываем и показываем заглушку.
     const localVideo = $("#call-local");
     const localPlaceholder = $("#call-local-placeholder");
-    if (localVideo) {
-      localVideo.style.display = (hasVideo && callState.camEnabled) ? "" : "none";
-    }
-    if (localPlaceholder) {
-      localPlaceholder.hidden = hasVideo && callState.camEnabled;
+    const hasLocalCam = callState.peer?.videoEnabled === true;
+    const showLocalVideo = hasLocalCam && callState.camEnabled;
+
+    if (localVideo) localVideo.hidden = !showLocalVideo;
+    if (localPlaceholder) localPlaceholder.hidden = showLocalVideo;
+
+    if (localPlaceholder && !showLocalVideo) {
+      const txt = localPlaceholder.querySelector(".local-placeholder-text");
+      if (txt) {
+        txt.textContent = hasLocalCam ? "Ваша камера выключена" : "Нет камеры";
+      }
     }
   } else {
     if (overlay) overlay.hidden = true;
   }
-  // Видео собеседника — есть ли трек?
   const remoteVideo = $("#call-remote");
   const remotePlaceholder = $("#call-remote-placeholder");
-  const remoteHasVideo = !!callState.remoteStream?.getVideoTracks?.()[0];
+
+  // Собеседник "отправляет видео", если у него есть камера и он её не выключил
+  const remoteHasVideo = callState.remoteCamOn !== false;
+  const remoteHasTrack = !!callState.remoteStream?.getVideoTracks?.()[0];
+
   if (remoteVideo) {
-    remoteVideo.style.display = remoteHasVideo ? "" : "none";
+    remoteVideo.style.display = (remoteHasVideo && remoteHasTrack) ? "" : "none";
   }
   if (remotePlaceholder) {
-    remotePlaceholder.hidden = remoteHasVideo;
+    remotePlaceholder.hidden = remoteHasVideo && remoteHasTrack;
+    const txt = remotePlaceholder.querySelector(".placeholder-text");
+    if (txt) {
+      txt.textContent = remoteHasVideo ? "Ожидание видео…" : "У собеседника выключена камера";
+    }
+    const icon = remotePlaceholder.querySelector(".placeholder-icon");
+    if (icon) icon.textContent = remoteHasVideo ? "📷" : "🚫";
   }
 }
 
@@ -550,6 +571,14 @@ export function wireCallUi() {
   if (hangupBtn) hangupBtn.onclick = () => endCall("hangup");
   if (acceptBtn) acceptBtn.onclick = acceptIncomingCall;
   if (declineBtn) declineBtn.onclick = declineIncomingCall;
+}
+
+export function handleIncomingCallState(msg) {
+  if (msg.callId !== callState.callId) return;
+  setCallState({
+    remoteCamOn: msg.camOn !== false,
+    remoteMicOn: msg.micOn !== false,
+  });
 }
 
 // ─── отладочные хелперы ───
@@ -573,3 +602,15 @@ window.fsmCallDebug.startOutgoing = () => {
 window.fsmCallDebug.accept = acceptIncomingCall;
 window.fsmCallDebug.decline = declineIncomingCall;
 window.fsmCallDebug.end = endCall;
+
+function sendCallState() {
+  const { peerEdPub, callId } = callState;
+  if (!peerEdPub || !callId) return;
+  sendSignal({
+    type: "call-state",
+    to: peerEdPub,
+    callId,
+    camOn: callState.camEnabled,
+    micOn: callState.micEnabled,
+  });
+}

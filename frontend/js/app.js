@@ -23,6 +23,7 @@ import {
   handleIncomingIce,
   handleIncomingEnd,
   handleUnreachable,
+  handleIncomingCallState,
 } from "./call.js";
 import {
   renderMyQr,
@@ -83,6 +84,11 @@ function registerCallHandlers() {
 
   onSignal("call-error", (msg) => {
     console.warn("Call error:", msg.error);
+  });
+
+  onSignal("call-state", (msg) => {
+    console.log("CALL STATE", msg);
+    handleIncomingCallState(msg);
   });
 
   // Отладочный хелпер для тестов (как раньше).

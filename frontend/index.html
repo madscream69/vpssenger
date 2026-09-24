@@ -86,11 +86,12 @@
       <div class="placeholder-text">Камера собеседника недоступна</div>
     </div>
 
-    <video id="call-local" autoplay playsinline muted></video>
-
-    <!-- Заглушка, если у нас нет камеры -->
-    <div id="call-local-placeholder" class="video-placeholder small" hidden>
-      <div class="placeholder-text">Нет камеры</div>
+    <div id="call-local-container">
+      <video id="call-local" autoplay playsinline muted></video>
+      <div id="call-local-placeholder" class="local-placeholder" hidden>
+        <div class="local-placeholder-icon">🚫</div>
+        <div class="local-placeholder-text">Ваша камера<br>выключена</div>
+      </div>
     </div>
 
     <div class="call-info">
