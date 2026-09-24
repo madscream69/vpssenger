@@ -18,7 +18,7 @@ CALL_RATE_WINDOW = 60
 CALL_RATE_MAX = 30
 CALL_RATE_TYPES = {
     "call-invite", "call-accept", "call-decline",
-    "call-sdp", "call-ice", "call-end",
+    "call-sdp", "call-ice", "call-end", "call-state",
 }
 CALL_ICE_RATE_MAX = 300 
 MAX_CALL_MSG_BYTES = 64 * 1024
