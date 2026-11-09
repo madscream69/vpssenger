@@ -126,6 +126,9 @@ async function boot() {
       return callId;
     };
   }
+
+  await processAddParamIfPresent();
+
   attachCallDebug();
   render();
 }
@@ -173,6 +176,7 @@ async function loginFromMnemonic(mnemonic) {
   await decryptAll();
 
   connectWs();
+  await applyPendingAdd();
 }
 
 function doLogout() {
@@ -340,6 +344,21 @@ function wireUi() {
       prompt("Скопируй вручную:", s);
     }
   };
+  $("#qr-copy-link").onclick = async () => {
+    try {
+      const link = contacts.buildShareLink();
+      try {
+        await navigator.clipboard.writeText(link);
+        showQrHint("Ссылка скопирована. Отправь её тому, кого хочешь добавить.");
+      } catch {
+        prompt("Скопируй ссылку вручную:", link);
+      }
+    } catch (e) {
+      showQrHint("Ошибка: " + e.message, true);
+    }
+  };
+
+  
 
   // ─── QR: сканирование ───
   const qrScan = $("#qr-scan-overlay");
@@ -444,6 +463,120 @@ async function handleIncomingContactString(raw) {
   } catch (e) {
     alert("Ошибка: " + e.message);
   }
+}
+
+/**
+ * Проверяет URL на наличие ?add= и возвращает строку контакта или null.
+ * Не удаляет параметр — сделаем это после успешной обработки.
+ */
+function readAddParamFromUrl() {
+  try {
+    const url = new URL(window.location.href);
+    const raw = url.searchParams.get("add");
+    return raw || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Убирает ?add= из URL (чтобы F5 не пытался добавить повторно).
+ */
+function clearAddParamFromUrl() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("add");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  } catch {}
+}
+
+/**
+ * Обрабатывает параметр add, если он есть.
+ * Если пользователь не залогинен — сохраняет в sessionStorage.
+ * Если залогинен — валидирует и добавляет.
+ */
+async function processAddParamIfPresent() {
+  const raw = readAddParamFromUrl();
+  if (!raw) return;
+
+  // Убираем из URL сразу — чтобы не мешал при перезагрузке.
+  // Если пользователь не залогинен — сохраняем в sessionStorage.
+  clearAddParamFromUrl();
+
+  if (!state.token) {
+    // Ждём логина. Сохраняем и показываем подсказку на экране логина.
+    sessionStorage.setItem("fsm.pendingAdd", raw);
+    showLoginHint("После входа контакт добавится автоматически");
+    return;
+  }
+
+  await applyPendingAdd(raw);
+}
+
+/**
+ * Применяет отложенный контакт после логина.
+ */
+async function applyPendingAdd() {
+  const raw = sessionStorage.getItem("fsm.pendingAdd");
+  if (!raw) return;
+  sessionStorage.removeItem("fsm.pendingAdd");
+
+  await applyAddString(raw);
+}
+
+/**
+ * Основной обработчик добавления по строке (после логина).
+ */
+async function applyAddString(raw) {
+  try {
+    const c = contacts.addContactFromString(raw);
+    await decryptAll({ retry: true });
+    showGlobalToast(`✅ Контакт «${c.name}» добавлен`);
+  } catch (e) {
+    // Контакт уже добавлен — не ошибка, показываем мягко.
+    if (e.message.includes("уже добавлен")) {
+      showGlobalToast(`ℹ️ ${e.message}`, "info");
+    } else {
+      showGlobalToast(`⚠️ ${e.message}`, "error");
+    }
+  }
+}
+
+/**
+ * Показывает подсказку на экране логина (если `#screen-login` активен).
+ */
+function showLoginHint(text) {
+  const hint = document.querySelector("#login-hint");
+  if (hint) {
+    hint.textContent = text;
+    hint.hidden = false;
+  }
+}
+
+/**
+ * Показывает глобальный тост (короткое уведомление внизу экрана).
+ */
+function showGlobalToast(text, kind = "info") {
+  let el = document.querySelector("#global-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "global-toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.className = "global-toast " + kind;
+  el.hidden = false;
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.hidden = true; }, 4000);
+}
+
+function showQrHint(text, isError = false) {
+  const el = $("#qr-link-hint");
+  if (!el) return;
+  el.hidden = false;
+  el.textContent = text;
+  el.style.color = isError ? "var(--warn)" : "var(--muted)";
+  setTimeout(() => { el.hidden = true; }, 4000);
 }
 // ---------- Render ----------
 

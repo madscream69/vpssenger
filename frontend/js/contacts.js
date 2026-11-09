@@ -135,3 +135,76 @@ export function importContactString(s) {
     xPub: parts[3],
   };
 }
+/**
+ * Валидирует строку контакта и возвращает { name, edPub, xPub } или бросает Error.
+ * Бросает с понятным текстом, чтобы UI показал пользователю.
+ */
+export function validateContactString(raw) {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("Пустая ссылка");
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length > 500) {
+    throw new Error("Ссылка слишком длинная");
+  }
+
+  const parts = trimmed.split(":");
+  if (parts.length !== 4 || parts[0] !== "fsm1") {
+    throw new Error("Неверный формат ссылки");
+  }
+
+  const name = decodeURIComponent(parts[1] || "").trim();
+  const edPub = parts[2];
+  const xPub = parts[3];
+
+  if (!name) throw new Error("В ссылке нет имени");
+  if (name.length > 32) throw new Error("Слишком длинное имя (максимум 32 символа)");
+
+  // Проверка ключей: base64, 32 байта = 44 символа с padding
+  const checkKey = (b64, label) => {
+    if (!b64) throw new Error(`В ссылке нет ${label}`);
+    if (b64.length !== 44) throw new Error(`Неверный ${label}`);
+    try {
+      atob(b64);
+    } catch {
+      throw new Error(`Повреждённый ${label}`);
+    }
+  };
+  checkKey(edPub, "публичного ключа");
+  checkKey(xPub, "шифровального ключа");
+
+  return { name, edPub, xPub };
+}
+
+/**
+ * Добавляет контакт из отвалидированной строки.
+ * Бросает Error, если контакт уже есть или это наш собственный ключ.
+ */
+export function addContactFromString(raw) {
+  const c = validateContactString(raw);
+  const self = state.edPub ? b64e(state.edPub) : null;
+
+  if (self && c.edPub === self) {
+    throw new Error("Это твоя собственная ссылка");
+  }
+  if (state.contacts.some((x) => x.edPub === c.edPub)) {
+    throw new Error(`Контакт «${c.name}» уже добавлен`);
+  }
+
+  addContact(c);
+  return c;
+}
+
+/**
+ * Собирает ссылку для шаринга.
+ */
+export function buildShareLink() {
+  const myName = getMyName() || "me";
+  const contactStr = exportContact({
+    name: myName,
+    edPub: b64e(state.edPub),
+    xPub: b64e(state.xPub),
+  });
+  const base = location.origin + location.pathname;
+  return `${base}?add=${encodeURIComponent(contactStr)}`;
+}

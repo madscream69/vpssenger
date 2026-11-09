@@ -1,7 +1,7 @@
 // Service Worker: офлайн-шелл + push.
 // Кэшируем ТОЛЬКО статику приложения. API (/messages, /auth, /ws) — никогда.
 
-const CACHE = "fsm-shell-v15"; 
+const CACHE = "fsm-shell-v16"; 
 const SHELL = [
   "./",
   "./index.html",

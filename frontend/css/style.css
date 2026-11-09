@@ -564,3 +564,50 @@ textarea, input[type="text"] {
 .video-placeholder.small .placeholder-text {
   font-size: 11px;
 }
+
+/* ─── Глобальный тост ─── */
+
+.global-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  z-index: 300;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+  max-width: 90vw;
+  text-align: center;
+  animation: toast-slide-in .2s ease-out;
+}
+.global-toast[hidden] { display: none; }
+.global-toast.error { border-color: var(--warn); color: #ffb3b3; }
+.global-toast.info { border-color: var(--accent); color: #bfd4ff; }
+
+@keyframes toast-slide-in {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+/* Подсказка на экране логина */
+#login-hint {
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  font-size: 13px;
+}
+#login-hint[hidden] { display: none; }
+
+/* Подсказка в QR-модалке */
+#qr-link-hint {
+  margin-top: 8px;
+  min-height: 18px;
+  font-size: 12px;
+  text-align: center;
+}

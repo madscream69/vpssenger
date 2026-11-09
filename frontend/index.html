@@ -29,6 +29,7 @@
   <label class="check"><input type="checkbox" id="remember"> Запомнить в этой вкладке</label>
 
   <p class="warn">Потеряешь фразу — потеряешь аккаунт навсегда. Запиши её на бумаге.</p>
+  <div id="login-hint" class="muted small" hidden></div>
 </section>
 
 <!-- ЭКРАН 2: мессенджер -->
@@ -125,9 +126,11 @@
     <canvas id="qr-show-canvas" width="280" height="280"></canvas>
     <div class="muted small" id="qr-my-name"></div>
     <div class="qr-actions">
-      <button id="qr-copy-string">Скопировать строку</button>
-      <button id="qr-show-close" class="primary">Закрыть</button>
+      <button id="qr-copy-link" class="primary">🔗 Скопировать ссылку</button>
+      <button id="qr-copy-string">Скопировать код</button>
+      <button id="qr-show-close">Закрыть</button>
     </div>
+    <div id="qr-link-hint" class="muted small" hidden></div>
   </div>
 </section>
 
