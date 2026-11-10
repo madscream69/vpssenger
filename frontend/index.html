@@ -46,7 +46,13 @@
         <button id="change-my-name" title="Сменить моё имя" aria-label="Сменить имя">✎</button>
         <button id="copy-my-contact" title="Моя визитка" aria-label="Моя визитка">⧉</button>
         <button id="add-contact" title="Добавить контакт" aria-label="Добавить контакт">＋</button>
-        <button id="logout" title="Выйти" aria-label="Выйти">⏻</button>
+        <button id="logout" title="Выйти" aria-label="Выйти">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -71,7 +77,9 @@
     <div id="messages"></div>
 
     <footer id="composer-row">
-      <textarea id="composer" rows="1" placeholder="Сообщение…" autocomplete="off"></textarea>
+      <textarea id="composer" rows="1" placeholder="Сообщение…" 
+          autocomplete="off" 
+          enterkeyhint="enter"></textarea>
       <button id="send" class="primary icon-btn" aria-label="Отправить">→</button>
     </footer>
   </main>

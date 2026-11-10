@@ -299,27 +299,118 @@ textarea, input[type="text"] {
 
 /* ─── мобильный режим ─── */
 
+/* ─── Мобильный UX: увеличение тап-таргетов ─── */
+
 @media (max-width: 720px) {
-  #screen-chat {
-    grid-template-columns: 1fr;
-    overflow: hidden;
+  /* Все кнопки — крупнее */
+  button {
+    min-height: 52px;
+    padding: 12px 18px;
+    font-size: 16px;
+    border-radius: 12px;
   }
 
-  /* По умолчанию — список чатов */
-  body.view-list #sidebar { display: flex; }
-  body.view-list #chat-pane { display: none; }
+  /* Иконки-кнопки (mic, cam, hangup, back, send) */
+  .icon-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
 
-  /* Когда открыт чат — только чат */
-  body.view-chat #sidebar { display: none; }
-  body.view-chat #chat-pane { display: flex; }
+  /* Кнопки в сайдбаре (✎ ⧉ ＋ ⏻) */
+  .me-actions button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    min-height: 48px;
+  }
 
-  #back-btn { display: inline-flex; }
+  /* Шапка чата */
+  #chat-header {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+  #chat-title {
+    font-size: 17px;
+  }
+  #chat-status {
+    font-size: 12px;
+  }
 
-  #sidebar { border-right: none; }
+  /* Контакты в списке — крупнее и с большим отступом */
+  .contact {
+    padding: 14px 14px;
+    border-radius: 12px;
+  }
+  .contact .name {
+    font-size: 16px;
+  }
+  .contact .last {
+    font-size: 13px;
+    margin-top: 3px;
+  }
 
-  .sidebar-head { padding-top: calc(12px + env(safe-area-inset-top)); }
+  /* Шапка сайдбара */
+  .sidebar-head {
+    padding: 14px;
+  }
+  .me-name {
+    font-size: 16px;
+  }
 
-  .msg { max-width: 88%; }
+  /* Composer */
+  #composer-row {
+    padding: 12px;
+    gap: 10px;
+  }
+  #composer {
+    font-size: 16px;   /* важно! иначе iOS зумит при фокусе */
+    min-height: 48px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  #send {
+    width: 52px;
+    height: 52px;
+    min-height: 52px;
+    font-size: 22px;
+  }
+
+  /* Сообщения */
+  .bubble {
+    font-size: 16px;
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
+  .time {
+    font-size: 12px;
+  }
+  .msg {
+    max-width: 82%;
+  }
+
+  /* Статус WS */
+  #ws-status {
+    font-size: 16px;
+  }
+
+  /* Кнопки звонка */
+  .call-controls button {
+    width: 68px;
+    height: 68px;
+    font-size: 28px;
+  }
+
+  /* Кнопки в модалках */
+  .qr-actions button {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  /* Поля ввода */
+  textarea, input[type="text"] {
+    font-size: 16px;   /* критично: иначе iOS зумит */
+  }
 }
 
 /* ─── оверлеи звонка (пока только каркас) ─── */
@@ -610,4 +701,15 @@ textarea, input[type="text"] {
   min-height: 18px;
   font-size: 12px;
   text-align: center;
+}
+#logout svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+@media (max-width: 720px) {
+  #logout svg {
+    width: 24px;
+    height: 24px;
+  }
 }

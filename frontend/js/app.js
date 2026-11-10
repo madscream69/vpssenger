@@ -437,10 +437,25 @@ function wireUi() {
   };
 
   $("#composer").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      $("#send").click();
+    if (e.key !== "Enter") return;
+
+    // На мобилке Enter — перенос строки (Shift недоступен).
+    // Отправка — только кнопкой «→».
+    const isMobile = window.matchMedia("(pointer: coarse)").matches
+                  || window.innerWidth <= 720;
+    if (isMobile) {
+      // Enter на мобилке — переносим строку. Ничего не делаем — textarea
+      // сама вставит \n по умолчанию.
+      return;
     }
+
+    // Десктоп: Enter — отправить, Shift+Enter — перенос.
+    if (e.shiftKey) {
+      return;   // Shift+Enter — пусть textarea сама вставит \n
+    }
+
+    e.preventDefault();
+    $("#send").click();
   });
 
   $("#change-my-name").onclick = () => {
