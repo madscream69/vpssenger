@@ -804,3 +804,33 @@ button svg {
   opacity: 0.5;
   background: rgba(255, 255, 255, .35);
 }
+/* ─── Кнопки звонка: строгое центрирование ─── */
+
+.call-controls button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.call-controls button svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .call-controls button {
+    width: 68px !important;
+    height: 68px !important;
+    padding: 0 !important;
+    font-size: 0 !important;   /* убираем влияние font-size на layout */
+  }
+  .call-controls button svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
