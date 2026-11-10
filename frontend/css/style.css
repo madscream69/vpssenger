@@ -302,6 +302,26 @@ textarea, input[type="text"] {
 /* ─── Мобильный UX: увеличение тап-таргетов ─── */
 
 @media (max-width: 720px) {
+  #screen-chat {
+    grid-template-columns: 1fr;
+    overflow: hidden;
+  }
+
+  /* По умолчанию — список чатов */
+  body.view-list #sidebar { display: flex; }
+  body.view-list #chat-pane { display: none; }
+
+  /* Когда открыт чат — только чат */
+  body.view-chat #sidebar { display: none; }
+  body.view-chat #chat-pane { display: flex; }
+
+  #back-btn { display: inline-flex; }
+
+  #sidebar { border-right: none; }
+
+  .sidebar-head { padding-top: calc(12px + env(safe-area-inset-top)); }
+
+  .msg { max-width: 88%; }
   /* Все кнопки — крупнее */
   button {
     min-height: 52px;
@@ -709,6 +729,36 @@ textarea, input[type="text"] {
 }
 @media (max-width: 720px) {
   #logout svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+/* Все иконки-кнопки — идеальное центрирование */
+.icon-btn,
+.me-actions button,
+#back-btn,
+#logout,
+#change-my-name,
+#copy-my-contact,
+#add-contact,
+#start-call {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+/* SVG внутри кнопок */
+button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  button svg {
     width: 24px;
     height: 24px;
   }
